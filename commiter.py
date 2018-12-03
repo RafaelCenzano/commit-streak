@@ -3,6 +3,7 @@ import time
 import json
 import schedule
 from config import *
+import os
 
 def count_user_commits(user):
     r = get('https://api.github.com/users/' + user + '/repos')
@@ -45,29 +46,40 @@ def job():
     grand_total = 0
 
     user = 'savagecoder77'
-    total = 0
+    usrtotal = 0
     for repo in count_user_commits(user):
         print('Repo ' + str(repo['name']) + ' has ' + str(repo['num_commits']) + ' commits.')
-        total += repo['num_commits']
+        usrtotal += repo['num_commits']
     print('Total commits: ' + str(total))
-    grand_total += total
+    grand_total += usrtotal
 
     user = 'marvin-virtual-assistant'
-    total = 0
+    orgtotal = 0
     for repo in count_user_commits(user):
         print('Repo ' + str(repo['name']) + ' has ' + str(repo['num_commits']) + ' commits.')
-        total += repo['num_commits']
+        orgtotal += repo['num_commits']
     print('Total commits: ' + str(total))
-    grand_total += total
+    grand_total += orgtotal
 
     print(str(grand_total))
-    return grand_total
+    return grand_total, usrtotal, orgtotal
+
+def check(total, sub1, sub2, history):
+    pass
 
 def job1():
-    bob = job()
+    grand, usr, org = job()
+    path_to_file = os.path.join('data','history.json')
+    with open(path_to_file, 'r') as check_history:
+        loaded_history = json.load(check_history)
+    check(grand, usr, org, loaded_history)
 
 def job2():
-    bob = job()
+    grand, usr, org = job()
+    path_to_file = os.path.join('data','history.json')
+    with open(path_to_file, 'r') as check_history:
+        loaded_history = json.load(check_history)
+    check(grand, usr, org, loaded_history)
 
 def run_threaded(job_func):
     job_thread = threading.Thread(target=job_func)
@@ -75,5 +87,5 @@ def run_threaded(job_func):
     job_thread.start()
 
 #schedule.every().day.at("21:30").do(run_threaded, job1)
-#schedule.every().day.at("24:30").do(run_threaded, job2)
+#schedule.every().day.at("23:30").do(run_threaded, job2)
 job()
