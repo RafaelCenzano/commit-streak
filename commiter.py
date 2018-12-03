@@ -2,8 +2,11 @@ from requests import get
 import time
 import json
 import schedule
-from config import *
+import config
 import os
+from smtplib import SMTP # smtplib for connection and sending of email
+from email.mime.text import MIMEText # MIMEText for formatting
+from email.mime.multipart import MIMEMultipart # MIMEMultipart changing sender
 
 def count_user_commits(user):
     r = get('https://api.github.com/users/' + user + '/repos')
@@ -16,7 +19,6 @@ def count_user_commits(user):
         n = count_repo_commits(repo['url'] + '/commits')
         repo['num_commits'] = n
         yield repo
-
 
 def count_repo_commits(commits_url, _acc=0):
     r = get(commits_url)
@@ -33,7 +35,6 @@ def count_repo_commits(commits_url, _acc=0):
     # try to be tail recursive, even when it doesn't matter in CPython
     return count_repo_commits(next_url, _acc + n)
 
-
 # given a link header from github, find the link for the next url which they use for pagination
 def find_next(link):
     for l in link.split(','):
@@ -41,6 +42,22 @@ def find_next(link):
         if b.strip() == 'rel="next"':
             return a.strip()[1:-1]
 
+def send_email():
+    sender_name = ('Commit-Streak <' + config.email_user + '>')
+    msg = MIMEMultipart() # formatting
+    msg['From'] = sender_name
+    msg['To'] = config.recipient_email # input recipient email
+    msg['Subject'] = 'Commit streak reminder' # input subject
+    msg.attach(MIMEText('You have not made a commit on github today. If you do not commit by 11:30 we will make a single update','plain')) # add body
+    message = msg.as_string() # format all text
+    smtp_server = SMTP('smtp.gmail.com', 587) # connection to 587 port for gmail
+    smtp_server.ehlo_or_helo_if_needed()
+    smtp_server.starttls() #start connection
+    smtp_server.ehlo_or_helo_if_needed()
+    smtp_server.login(config.email_user, config.email_pass) # login with credentials
+    smtp_server.sendmail(config.email_user, config.recipient_email, message) # send email
+    smtp_server.quit() # quit connection
+    print('Email Sent!') # done
 
 def job():
     grand_total = 0
@@ -65,27 +82,71 @@ def job():
     return grand_total, usrtotal, orgtotal
 
 def check(total, sub1, sub2, history):
-    pass
+
+    check = False
+    check1 = False
+    check2 = False
+
+    if total == history['original']['grand']:
+        check = True
+    else:
+        history['current']['grand'] = total
+    if sub1 == history['original']['maintotal']:
+        check1 = True
+    else:
+        history['current']['maintotal'] = sub1
+    if sub2 == history['original']['organizationtotal']:
+        check2 = True
+    else:
+        history['current']['organizationtotal'] = sub2
+
+    return check == True and check1 == True and check2 == True
 
 def job1():
     grand, usr, org = job()
     path_to_file = os.path.join('data','history.json')
     with open(path_to_file, 'r') as check_history:
         loaded_history = json.load(check_history)
-    check(grand, usr, org, loaded_history)
+    var = check(grand, usr, org, loaded_history)
+    if var == True:
+        send_email()
+        print('sent reminder')
+    else:
+        print('check complete everything in place')
 
 def job2():
     grand, usr, org = job()
     path_to_file = os.path.join('data','history.json')
     with open(path_to_file, 'r') as check_history:
         loaded_history = json.load(check_history)
-    check(grand, usr, org, loaded_history)
+    var = check(grand, usr, org, loaded_history)
+    if var == True:
+        print('commiting')
+        f = open('commits.txt', 'w')
+        f.write('/n' + str(os.urandom(64).decode('utf-8')))
+        f.close()
+        os.system('git add commits.txt\ngit commit -m "made an update for you"\ngit push')
+        print('made a commit')
+    else:
+        print('check complete everything in place')
+    with open(path_to_file, 'r') as check_history:
+        loaded_history = json.load(check_history)
+    loaded_history['current']['grand'] = loaded_history['current']['grand'] + 1
+    loaded_history['current']['maintotal'] = loaded_history['current']['maintotal'] + 1
+    loaded_history['original']['grand'] = loaded_history['current']['grand']
+    loaded_history['original']['maintotal'] = loaded_history['current']['maintotal']
+    loaded_history['original']['organizationtotal'] = loaded_history['current']['organizationtotal']
 
 def run_threaded(job_func):
     job_thread = threading.Thread(target=job_func)
     print('start')
     job_thread.start()
 
-#schedule.every().day.at("21:30").do(run_threaded, job1)
-#schedule.every().day.at("23:30").do(run_threaded, job2)
-job()
+print('starting')
+schedule.every().day.at("21:30").do(run_threaded, job1)
+schedule.every().day.at("23:30").do(run_threaded, job2)
+
+print('looping')
+while True:
+    schedule.run_pending()
+    time.sleep(30)
