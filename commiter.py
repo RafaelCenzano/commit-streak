@@ -7,6 +7,7 @@ import os
 from smtplib import SMTP # smtplib for connection and sending of email
 from email.mime.text import MIMEText # MIMEText for formatting
 from email.mime.multipart import MIMEMultipart # MIMEMultipart changing sender
+import threading
 
 def count_user_commits(user):
     r = get('https://api.github.com/users/' + user + '/repos')
