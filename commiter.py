@@ -68,7 +68,7 @@ def job():
     for repo in count_user_commits(user):
         print('Repo ' + str(repo['name']) + ' has ' + str(repo['num_commits']) + ' commits.')
         usrtotal += repo['num_commits']
-    print('Total commits: ' + str(total))
+    print('Total commits: ' + str(usrtotal))
     grand_total += usrtotal
 
     user = 'marvin-virtual-assistant'
@@ -76,7 +76,7 @@ def job():
     for repo in count_user_commits(user):
         print('Repo ' + str(repo['name']) + ' has ' + str(repo['num_commits']) + ' commits.')
         orgtotal += repo['num_commits']
-    print('Total commits: ' + str(total))
+    print('Total commits: ' + str(orgtotal))
     grand_total += orgtotal
 
     print(str(grand_total))
