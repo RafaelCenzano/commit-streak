@@ -144,7 +144,7 @@ def run_threaded(job_func):
     job_thread.start()
 
 print('starting')
-schedule.every().day.at("21:30").do(run_threaded, job1)
+schedule.every().day.at("18:00").do(run_threaded, job1)
 schedule.every().day.at("23:30").do(run_threaded, job2)
 
 print('looping')
