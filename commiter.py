@@ -131,11 +131,9 @@ def job3():
     path_to_file = os.path.join('data','history.json')
     with open(path_to_file, 'r') as check_history:
         loaded_history = json.load(check_history)
-    loaded_history['current']['grand'] = loaded_history['current']['grand'] + 1
-    loaded_history['current']['maintotal'] = loaded_history['current']['maintotal'] + 1
-    loaded_history['original']['grand'] = loaded_history['current']['grand']
-    loaded_history['original']['maintotal'] = loaded_history['current']['maintotal']
-    loaded_history['original']['organizationtotal'] = loaded_history['current']['organizationtotal']
+    loaded_history['original']['grand'] = grand
+    loaded_history['original']['maintotal'] = usr
+    loaded_history['original']['organizationtotal'] = org
     with open(settings_path, 'w') as newjsonfile:
         json.dump(loaded_history, newjsonfile)
 
@@ -145,7 +143,7 @@ def run_threaded(job_func):
     job_thread.start()
 
 print('starting')
-schedule.every().day.at("3:00").do(run_threaded, job1)
+schedule.every().day.at("3:00").do(run_threaded, job3)
 schedule.every().day.at("19:30").do(run_threaded, job1)
 schedule.every().day.at("23:30").do(run_threaded, job2)
 
