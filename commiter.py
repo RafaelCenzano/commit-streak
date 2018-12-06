@@ -82,37 +82,19 @@ def job():
     print(str(grand_total))
     return grand_total, usrtotal, orgtotal
 
-def check(total, sub1, sub2, history):
-
-    check = False
-    check1 = False
-    check2 = False
-
+def check(total, history):
     if total == history['original']['grand']:
-        check = True
-    else:
-        history['current']['grand'] = total
-    if sub1 == history['original']['maintotal']:
-        check1 = True
-    else:
-        history['current']['maintotal'] = sub1
-    if sub2 == history['original']['organizationtotal']:
-        check2 = True
-    else:
-        history['current']['organizationtotal'] = sub2
-
-    if check == True and check1 == True and check2 == True:
         return True
     else:
+        history['current']['grand'] = total
         return False
-
 
 def job1():
     grand, usr, org = job()
     path_to_file = os.path.join('data','history.json')
     with open(path_to_file, 'r') as check_history:
         loaded_history = json.load(check_history)
-    var = check(grand, usr, org, loaded_history)
+    var = check(grand, loaded_history)
     if var == True:
         send_email()
         print('sent reminder')
@@ -124,7 +106,7 @@ def job2():
     path_to_file = os.path.join('data','history.json')
     with open(path_to_file, 'r') as check_history:
         loaded_history = json.load(check_history)
-    var = check(grand, usr, org, loaded_history)
+    var = check(grand, loaded_history)
     if var == True:
         print('commiting')
         f = open('commits.txt', 'w')
