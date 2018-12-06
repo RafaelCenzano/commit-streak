@@ -101,7 +101,11 @@ def check(total, sub1, sub2, history):
     else:
         history['current']['organizationtotal'] = sub2
 
-    return check == True and check1 == True and check2 == True
+    if check == True and check1 == True and check2 == True:
+        return True
+    else:
+        return False
+
 
 def job1():
     grand, usr, org = job()
@@ -144,7 +148,7 @@ def run_threaded(job_func):
     job_thread.start()
 
 print('starting')
-schedule.every().day.at("18:00").do(run_threaded, job1)
+schedule.every().day.at("19:30").do(run_threaded, job1)
 schedule.every().day.at("23:30").do(run_threaded, job2)
 
 print('looping')
